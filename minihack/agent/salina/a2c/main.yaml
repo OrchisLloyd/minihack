@@ -1,0 +1,100 @@
+logger:
+  classname: salina.logger.TFLogger
+  log_dir: ./a2c
+  every_n_seconds: 60
+  modulo: 1
+  verbose: True
+
+device: cpu
+
+agent:
+  embedding_dim: 64
+  hidden_dim: 256
+  crop_model: cnn
+  crop_dim: 9
+  glyph_type: all_cat
+  use_index_select: true
+  layers: 5
+  equalize_input_dim: false
+  equalize_factor: 2
+  msg:
+    model: none
+    hidden_dim: 64
+    embedding_dim: 32
+
+env:
+  classname: minihack.agent.salina.env.make_env
+  name: MiniHack-MazeWalk-9x9-v0
+  obs_keys: "glyphs,chars,colors,specials,blstats,message"
+  save_tty: False
+  max_episode_steps: 100
+  fn_penalty_step: constant
+  penalty_time: 0.0
+  penalty_step: -0.001
+
+policy_agent:
+  classname: minihack.agent.salina.a2c.agents.policy_gru
+  encoder:
+    classname: minihack.agent.salina.agents.MiniHackObservationAgent
+    args: ${agent}
+  n_layers: 1
+  hidden_size: 256
+
+critic_agent:
+  classname: minihack.agent.salina.a2c.agents.critic_gru
+  encoder:
+    classname: minihack.agent.salina.agents.MiniHackObservationAgent
+    args: ${agent}
+  n_layers: 1
+  hidden_size: 256
+
+algorithm:
+  env_seed: 432
+  n_envs: 64
+  n_processes: 4
+  n_timesteps: 16
+  overlapping_timesteps: 8
+  burning_timesteps: 0
+  max_epochs: 1000000
+  discount_factor: 0.99
+  entropy_coef: 0.01
+  critic_coef: 1.0
+  a2c_coef: 1.0
+  gae: 0.7
+
+  device: ${device}
+
+  env: ${env}
+
+  optimizer:
+    classname: torch.optim.RMSprop
+    lr: 0.0001
+
+  evaluation:
+    env_seed: 23
+    n_envs: 64
+    n_processes: 2
+    n_timesteps: 1000
+
+n_cpus_learn: ${plus:${algorithm.n_processes},1}
+n_total_cpus: ${plus:${n_cpus_learn},${algorithm.evaluation.n_processes}}
+
+hydra:
+  launcher:
+    nodes: 1
+    mem_gb: 64
+    max_num_timeout: 0
+    cpus_per_task: ${n_total_cpus}
+    gpus_per_node: ${n_gpus:${device}}
+    signal_delay_s: 30
+    timeout_min: 120
+    tasks_per_node: 1
+    partition: learnlab
+  job_logging:
+    root:
+      handlers: []
+
+defaults:
+ - override hydra/job_logging: colorlog
+ - override hydra/hydra_logging: colorlog
+ - override hydra/launcher: submitit_slurm

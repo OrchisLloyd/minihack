@@ -1,0 +1,8 @@
+OMP_NUM_THREADS=1 PYTHONPATH=ludovic_stuffs python salina_nethack/minihack_baselines/a2c/a2c_with_eval.py -cn main_slurm --multirun \
+a2c_agent.classname=minihack_baselines.a2c.agents.a2c_recurrent_decoupled_mlp_minihack \
+algorithm.optimizer.lr=0.0001,0.001 \
+algorithm.entropy_coef=0.001 \
+algorithm.gae=0.0,1.0 \
+algorithm.n_envs=16,64 \
+algorithm.n_timesteps=4,8,16 \
+a2c_agent.hidden_size=64,256,512
