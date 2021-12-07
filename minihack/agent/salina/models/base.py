@@ -19,46 +19,13 @@ from torch.nn import functional as F
 
 from nle import nethack
 
-from minihack.agent.common.models.embed import GlyphEmbedding
-
-# from minihack.agent.rllib.models import RLLibGlyphEmbedding
+from minihack.agent.salina.models.embed import GlyphEmbedding
 from minihack.agent.common.models.transformer import TransformerEncoder
 
 NUM_GLYPHS = nethack.MAX_GLYPH
 NUM_FEATURES = nethack.BLSTATS_SHAPE[0]
 PAD_CHAR = 0
 NUM_CHARS = 256
-
-
-class SalinaGlyphEmbedding(GlyphEmbedding):
-    def glyphs_to_idgroup(self, glyphs):
-        B, H, W = glyphs.shape
-        ids_groups = self.id_pairs_table.index_select(
-            0, glyphs.contiguous().view(-1).long()
-        )
-        ids = ids_groups.select(1, 0).view(B, H, W).long()
-        groups = ids_groups.select(1, 1).view(B, H, W).long()
-        return (ids, groups)
-
-    def prepare_input(self, inputs):
-        """Take the inputs to the network as dictionary and return a namedtuple
-        of the input/index tensors to be embedded (GlyphTuple)"""
-        embeddable_data = {}
-        # Only flatten the data we want
-        for key, value in inputs.items():
-            if key in self.embeddings:
-                # -- [ B x ...] -> [ B' x ... ]
-                # embeddable_data[key] = torch.flatten(value, 0, 1).long()
-                embeddable_data[key] = value.long()
-
-        # add our group id and subgroup id if we want them
-        if self.requires_id_pairs_table:
-            ids, groups = self.glyphs_to_idgroup(inputs["glyphs"])
-            embeddable_data["groups"] = groups
-            embeddable_data["subgroup_ids"] = ids
-
-        # convert embeddable_data to a named tuple
-        return self.GlyphTuple(**embeddable_data)
 
 
 class NetHackNet(nn.Module):
@@ -217,7 +184,7 @@ class BaseNet(NetHackNet):
         self.crop = Crop(self.H, self.W, self.crop_dim, self.crop_dim)
 
         self.glyph_type = flags.glyph_type
-        self.glyph_embedding = SalinaGlyphEmbedding(
+        self.glyph_embedding = GlyphEmbedding(
             flags.glyph_type,
             flags.embedding_dim,
             None,
@@ -431,9 +398,12 @@ class BaseNet(NetHackNet):
         reps = [features_emb]
 
         # -- [B x H' x W']
-        crop = self.glyph_embedding.GlyphTuple(
-            *[self.crop(g, coordinates) for g in glyphs]
-        )
+        # crop = self.glyph_embedding.GlyphTuple(
+        #     *[self.crop(g, coordinates) for g in glyphs]
+        # )
+        crop = {}
+        for key, val in glyphs.items():
+            crop[key] = self.crop(val, coordinates)
         # -- [B x H' x W' x K]
         crop_emb = self.glyph_embedding(crop)
 

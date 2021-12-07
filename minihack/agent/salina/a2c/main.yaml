@@ -24,7 +24,7 @@ agent:
 
 env:
   classname: minihack.agent.salina.env.make_env
-  name: MiniHack-MazeWalk-9x9-v0
+  name: MiniHack-Room-Monster-15x15-v0
   obs_keys: "glyphs,chars,colors,specials,blstats,message"
   save_tty: False
   max_episode_steps: 100

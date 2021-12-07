@@ -5,15 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-import gym
-import torch
-import torch.nn as nn
-from gym.wrappers import TimeLimit
-
 from salina import TAgent
-from minihack.agent.salina.model import BaseNet
-
-import torch
+from minihack.agent.salina.models.base import BaseNet
 from nle.env.base import DUNGEON_SHAPE
 
 
@@ -27,7 +20,7 @@ class MiniHackObservationAgent(TAgent):
         self.output_name = output_name
 
     def forward(self, t=None, **args):
-        if not t is None:
+        if t is not None:
             d = {
                 k[4:]: self.workspace.get(k, t)
                 for k in self.workspace.keys()
