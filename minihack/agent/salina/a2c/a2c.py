@@ -15,6 +15,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from gym.wrappers import TimeLimit
 from omegaconf import DictConfig, OmegaConf
+import wandb
+import omegaconf
 
 import salina
 import salina.rl.functional as RLF
@@ -203,6 +205,16 @@ def run_a2c(policy_agent, critic_agent, logger, cfg):
         if creward.size()[0] > 0:
             logger.add_scalar("reward", creward.mean().item(), epoch)
 
+        if cfg.use_wandb:
+            wandb.log(
+                {
+                    "critic_loss": critic_loss.item(),
+                    "entropy_loss": entropy_loss.item(),
+                    "a2c_loss": a2c_loss.item(),
+                    "reward": creward.mean().item(),
+                }
+            )
+
 
 @hydra.main(config_path=".", config_name="main.yaml")
 def main(cfg):
@@ -213,6 +225,15 @@ def main(cfg):
     policy_agent = instantiate_class(cfg.policy_agent)
     critic_agent = instantiate_class(cfg.critic_agent)
     mp.set_start_method("spawn")
+
+    if cfg.use_wandb:
+        wandb.init(
+            project=cfg.wandb.project,
+            entity=cfg.wandb.entity,
+            group=cfg.wandb.group,
+            config=omegaconf.OmegaConf.to_container(cfg),
+        )
+
     run_a2c(policy_agent, critic_agent, logger, cfg)
 
 

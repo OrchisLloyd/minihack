@@ -13,10 +13,9 @@ from nle.env.base import DUNGEON_SHAPE
 class MiniHackObservationAgent(TAgent):
     # Transform obervation+previous action to a vector of size output_size using a MLP
 
-    def __init__(self, output_name, args):
+    def __init__(self, output_name, args, device):
         super().__init__()
-        # self.obs_model = ObservationToVector(use_tty_only=use_tty_only)
-        self.obs_model = BaseNet(DUNGEON_SHAPE, args)
+        self.obs_model = BaseNet(DUNGEON_SHAPE, args, device)
         self.output_name = output_name
 
     def forward(self, t=None, **args):

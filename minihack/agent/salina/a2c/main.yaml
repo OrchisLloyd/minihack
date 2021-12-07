@@ -7,6 +7,12 @@ logger:
 
 device: cpu
 
+use_wandb: true
+wandb:
+  entity: nethack
+  project: minihack_salina
+  group: default
+
 agent:
   embedding_dim: 64
   hidden_dim: 256
@@ -37,6 +43,7 @@ policy_agent:
   encoder:
     classname: minihack.agent.salina.agents.MiniHackObservationAgent
     args: ${agent}
+    device: ${device}
   n_layers: 1
   hidden_size: 256
 
@@ -45,6 +52,7 @@ critic_agent:
   encoder:
     classname: minihack.agent.salina.agents.MiniHackObservationAgent
     args: ${agent}
+    device: ${device}
   n_layers: 1
   hidden_size: 256
 

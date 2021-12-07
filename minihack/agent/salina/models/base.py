@@ -85,7 +85,9 @@ class NetHackNet(nn.Module):
 
 
 class Crop(nn.Module):
-    def __init__(self, height, width, height_target, width_target):
+    def __init__(
+        self, height, width, height_target, width_target, device=None
+    ):
         super(Crop, self).__init__()
         self.width = width
         self.height = height
@@ -97,6 +99,10 @@ class Crop(nn.Module):
         self.height_grid = self._step_to_range(
             2 / (self.height - 1), height_target
         )[:, None].expand(-1, self.width_target)
+
+        if device is not None:
+            self.width_grid = self.width_grid.to(device)
+            self.height_grid = self.height_grid.to(device)
 
     def _step_to_range(self, step, num_steps):
         return torch.tensor(
@@ -163,7 +169,7 @@ class Flatten(nn.Module):
 
 
 class BaseNet(NetHackNet):
-    def __init__(self, observation_shape, flags):
+    def __init__(self, observation_shape, flags, device):
         super(BaseNet, self).__init__()
 
         self.flags = flags
@@ -181,13 +187,13 @@ class BaseNet(NetHackNet):
 
         self.num_features = NUM_FEATURES
 
-        self.crop = Crop(self.H, self.W, self.crop_dim, self.crop_dim)
+        self.crop = Crop(self.H, self.W, self.crop_dim, self.crop_dim, device)
 
         self.glyph_type = flags.glyph_type
         self.glyph_embedding = GlyphEmbedding(
             flags.glyph_type,
             flags.embedding_dim,
-            None,
+            device,
             flags.use_index_select,
         )
 
@@ -227,7 +233,7 @@ class BaseNet(NetHackNet):
                 heads=8,
                 height=self.crop_dim,
                 width=self.crop_dim,
-                device=None,
+                device=device,
             )
         elif self.crop_model == "cnn":
             conv_extract_crop = [
