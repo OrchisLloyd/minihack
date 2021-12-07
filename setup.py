@@ -22,6 +22,8 @@ packages = [
     "minihack.agent.polybeast.models",
     "minihack.agent.polybeast.core",
     "minihack.agent.rllib",
+    "minihack.agent.salina",
+    "minihack.agent.salina.models",
     "minihack.agent.common",
     "minihack.agent.common.envs",
     "minihack.agent.common.models",
